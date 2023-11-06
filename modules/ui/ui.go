@@ -1,3 +1,8 @@
+/*
+PayShop3 - An Interactive Order-based System for PayDay3
+Source: https://github.com/Alex-Dash/payshop3
+Copyright (C) 2023  AlexDash
+*/
 package ui
 
 import (

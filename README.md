@@ -1,12 +1,12 @@
 # PayShop 3 - Your Personal Black Market!
 
 ## Disclaimer
-PayShop3 works via a public shop database. Although many items are marked as purchasable, it is not clear if it was intended for them to be. 
+[PayShop3](https://github.com/Alex-Dash/payshop3) works via a public shop database. Although many items are marked as purchasable, it is not clear if it was intended for them to be. 
 
 **USE AT YOUR OWN RISK**
 
 ## What is it?
-PayShop3 is a console application with mouse support for buying assets for [PayDay3](https://store.steampowered.com/app/1272080/PAYDAY_3/) that works by placing orders directly on [Nebula](https://nebula.starbreeze.com/).
+[PayShop3](https://github.com/Alex-Dash/payshop3) is a console application with mouse support for buying assets for [PayDay3](https://store.steampowered.com/app/1272080/PAYDAY_3/) that works by placing orders directly on [Nebula](https://nebula.starbreeze.com/).
 
 No longer you need to spend hours buying Zipline Bags one by one! With this app you can place an order for hundreds, thousands or even millions! (if your wallet would handle that much of course)
 
@@ -29,7 +29,7 @@ You can place 2 types of orders:
 - [ ] OAuth login option (Log-in via Steam, PSN or XBOX)
 
 ## Automatic login
-If `"Save my info"` option is chosen, PayShop3 creates a file called `payshop3_logindata.json` in the directory where the program is located.
+If `"Save my info"` option is chosen, [PayShop3](https://github.com/Alex-Dash/payshop3) creates a file called `payshop3_logindata.json` in the directory where the program is located.
 
 Upon startup the app also looks for this file nearby, and reads it if found.
 
