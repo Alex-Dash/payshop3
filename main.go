@@ -30,7 +30,7 @@ var (
 	Cart            []api.OrderInitData
 	checkout        func()
 	OrderInProgress bool
-	B_VER           = "v0.8.0-ALPHA"
+	B_VER           = "v0.8.2-ALPHA"
 )
 
 func main() {

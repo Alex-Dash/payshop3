@@ -581,7 +581,20 @@ func GetItemBySKU(sku string) (ShopItemData, error) {
 	return ShopItemData{}, errors.New("item was not found in the shop")
 }
 
+func safeguard(itemid string) bool {
+	for _, v := range *Shop.Data {
+		if *v.ItemId == itemid {
+			return *v.Purchasable && *v.Listable
+		}
+	}
+	return false
+}
+
 func ExecOrder(item OrderInitData) (OrderRespData, error) {
+	if !safeguard(item.ItemId) {
+		return OrderRespData{}, errors.New("item was not found or not publicly avalible for purchase")
+	}
+
 	// Create a clear object so the server wouldn't get confused
 	body, err := json.Marshal(OrderInitData{
 		ItemId:          item.ItemId,
