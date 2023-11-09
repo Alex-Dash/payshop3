@@ -582,7 +582,7 @@ func setupUI() {
 		AddButton("Quit", func() {
 			app.Stop()
 		}).SetButtonsAlign(tview.AlignCenter)
-	loginScreen := tview.NewGrid().SetColumns(0, 80, 0).SetRows(0, 80, 0).AddItem(loginForm, 1, 1, 1, 1, 0, 0, false)
+	loginScreen = tview.NewGrid().SetColumns(0, 80, 0).SetRows(0, 80, 0).AddItem(loginForm, 1, 1, 1, 1, 0, 0, false)
 
 	// menu := newPrimitive("Menu")
 	order_config_basic := newPrimitive("Order configuration")

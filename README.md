@@ -24,7 +24,7 @@ You can place 2 types of orders:
 - [x] Bulk orders for C-Stacks
 - [x] Automatic login
 - [ ] Inventory view
-- [ ] Bulk orders for PayDay credits
+- [x] Bulk orders for PayDay credits
 - [ ] Arbitrary item ordering
 - [ ] OAuth login option (Log-in via Steam, PSN or XBOX)
 
