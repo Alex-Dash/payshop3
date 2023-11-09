@@ -1,3 +1,5 @@
+github.com/biter777/processex v0.0.0-20210102170504-01bb369eda71 h1:SYKMUQEyuugaw68KtUlL1MpH36o2QL3ug93/y5Cye60=
+github.com/biter777/processex v0.0.0-20210102170504-01bb369eda71/go.mod h1:3+wMnZWvewiNQL4PP4vEXiN1LgRlL4SXgWhj2fNMmeI=
 github.com/gdamore/encoding v1.0.0 h1:+7OoQ1Bc6eTm5niUzBa0Ctsh6JbMW6Ra+YNuAtDBdko=
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
 github.com/gdamore/tcell/v2 v2.6.0 h1:OKbluoP9VYmJwZwq/iLb4BxwKcwGthaa1YNBJIyCySg=

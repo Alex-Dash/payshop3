@@ -12,6 +12,40 @@ import (
 	"golang.org/x/text/language"
 )
 
+var CurrencySumbolByCode map[string]string = map[string]string{
+	"USD": "$",
+	"EUR": "€",
+	"CRC": "₡",
+	"BRR": "₢",
+	"FRF": "₣",
+	"ITL": "₤",
+	"NGN": "₦",
+	"ESP": "₧",
+	"LKR": "₨",
+	"MUR": "₨",
+	"PKR": "₨",
+	"KRW": "₩",
+	"ILS": "₪",
+	"VND": "₫",
+	"LAK": "₭",
+	"MNT": "₮",
+	"GRD": "₯",
+	"PHP": "₱",
+	"PYG": "₲",
+	"ARA": "₳",
+	"UAH": "₴",
+	"GHS": "₵",
+	"KZT": "₸",
+	"INR": "₹",
+	"TRY": "₺",
+	"DEM": "₻",
+	"AZN": "₼",
+	"TMT": "₼",
+	"RUB": "₽",
+	"GEL": "₾",
+	"BTC": "₿",
+}
+
 var PrettyNamesBySKU map[string]string = map[string]string{
 	"pd3_preplanning_branchbank_1": "Van Will Not Leave",
 	"pd3_preplanning_branchbank_2": "Additional Secure Point",

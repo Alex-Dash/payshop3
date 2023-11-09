@@ -3,6 +3,7 @@ module payshop3
 go 1.20
 
 require (
+	github.com/biter777/processex v0.0.0-20210102170504-01bb369eda71
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.6.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

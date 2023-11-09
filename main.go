@@ -13,6 +13,7 @@ import (
 	"os"
 	"payshop3/api"
 	"payshop3/ui"
+	"payshop3/util"
 	"strconv"
 	"strings"
 	"time"
@@ -22,7 +23,8 @@ import (
 )
 
 var (
-	loginScreen     *tview.Form
+	loginScreen     *tview.Grid
+	loginForm       *tview.Form
 	entryPage       *tview.Grid
 	main_menu_list  *tview.List
 	app             *tview.Application
@@ -32,10 +34,11 @@ var (
 	basicOrderData  api.BasicOrderData
 	exOrderData     api.ExclusiveOrderData
 	goldOrderData   api.GoldOrderData
+	credOrderData   api.CreditOrderData
 	Cart            []api.OrderInitData
 	checkout        func()
 	OrderInProgress bool
-	B_VER           = "v0.8.2-ALPHA"
+	B_VER           = "v0.8.5-ALPHA"
 )
 
 func main() {
@@ -90,6 +93,31 @@ func genericModal(text string) {
 		SetText(text).
 		AddButtons([]string{"Back"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			app.SetRoot(pages, true).SetFocus(pages)
+		})
+	app.SetRoot(modal, true).SetFocus(modal)
+}
+
+func browserModal(resp api.OrderRespData) {
+	dec := *resp.Currency.Decimals
+	curr := *resp.Currency.CurrencyCode
+	sym := ui.CurrencySumbolByCode[curr]
+
+	price := fmt.Sprintf("%s%s %s", sym, util.ToFixedDecimal(*resp.Price, dec), curr)
+	tax := fmt.Sprintf("%s%s %s", sym, util.ToFixedDecimal(*resp.Tax, dec), curr)
+	vat := fmt.Sprintf("%s%s %s", sym, util.ToFixedDecimal(*resp.Vat, dec), curr)
+	stax := fmt.Sprintf("%s%s %s", sym, util.ToFixedDecimal(*resp.SalesTax, dec), curr)
+	ppfee := fmt.Sprintf("%s%s %s", sym, util.ToFixedDecimal(*resp.PaymentProviderFee, dec), curr)
+	pmfee := fmt.Sprintf("%s%s %s", sym, util.ToFixedDecimal(*resp.PaymentMethodFee, dec), curr)
+
+	modal := tview.NewModal().
+		SetText(fmt.Sprintf("Your order has been placed\nOrder No: %s\nSubtotal: %s\nTax: %s\nVAT: %s\nSales Tax: %s\nPayment Provider Fee: %s\nPayment Method Fee: %s\nLink: %s\n",
+			*resp.OrderNo, price, tax, vat, stax, ppfee, pmfee, *resp.PaymentStationUrl)).
+		AddButtons([]string{"Back", "Open in browser"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			if buttonLabel == "Open in browser" {
+				util.OpenBrowser(*resp.PaymentStationUrl)
+			}
 			app.SetRoot(pages, true).SetFocus(pages)
 		})
 	app.SetRoot(modal, true).SetFocus(modal)
@@ -389,6 +417,48 @@ func addGoldCacheToCart() error {
 	return nil
 }
 
+func orderCredits(credit_shop_items []api.ShopItemData, form *tview.Form) (api.OrderRespData, error) {
+	b := form.GetButton(form.GetButtonIndex("Order directly"))
+	if b == nil {
+		return api.OrderRespData{}, errors.New("failed to find ui button")
+	}
+	b.SetDisabled(true)
+	f := false
+	var item api.ShopItemData
+	for _, item = range credit_shop_items {
+		if *item.Name == credOrderData.ItemType {
+			f = true
+			break
+		}
+	}
+	if !f {
+		b.SetDisabled(false)
+		return api.OrderRespData{}, errors.New("could not find item in the shop")
+	}
+	rd := *item.RegionData
+	oid := api.OrderInitData{
+		ItemId:          *item.ItemId,
+		Quantity:        credOrderData.Amount,
+		Price:           *rd[0].Price * credOrderData.Amount,
+		DiscountedPrice: *rd[0].DiscountedPrice * credOrderData.Amount,
+		CurrencyCode:    *rd[0].CurrencyCode,
+		Region:          *item.Region,
+		Language:        *item.Language,
+		ReturnUrl:       "http://127.0.0.1",
+	}
+	resp, err := api.ExecOrder(oid)
+	if resp.PaymentStationUrl != nil && err == nil {
+		// link present
+		b.SetDisabled(false)
+		return resp, nil
+	}
+	b.SetDisabled(false)
+	if err != nil {
+		return api.OrderRespData{}, err
+	}
+	return api.OrderRespData{}, errors.New("failed to find payment link")
+}
+
 func headerTimedUpdate() {
 	api.UpdateWallets()
 	updateHeaderUI()
@@ -480,38 +550,39 @@ func updateCartUI() {
 func setupUI() {
 	app = tview.NewApplication()
 	pages = tview.NewPages()
-	loginScreen = tview.NewForm().
+	loginForm = tview.NewForm().
 		AddTextView("Status", "Logged out.\nPlease log in with your Nebula account first", 50, 2, true, false).
 		AddInputField("Login", "", 50, nil, func(text string) {}).
 		AddPasswordField("Password", "", 50, '*', nil).
 		AddCheckbox("Save my info", false, nil).
 		AddButton("Login", func() {
-			loginScreen.GetFormItem(loginScreen.GetFormItemIndex("Status")).(*tview.TextView).SetText("Logging in...")
-			login := loginScreen.GetFormItem(loginScreen.GetFormItemIndex("Login")).(*tview.InputField).GetText()
-			password := loginScreen.GetFormItem(loginScreen.GetFormItemIndex("Password")).(*tview.InputField).GetText()
-			save := loginScreen.GetFormItem(loginScreen.GetFormItemIndex("Save my info")).(*tview.Checkbox).IsChecked()
+			loginForm.GetFormItemByLabel("Status").(*tview.TextView).SetText("Logging in...")
+			login := loginForm.GetFormItemByLabel("Login").(*tview.InputField).GetText()
+			password := loginForm.GetFormItemByLabel("Password").(*tview.InputField).GetText()
+			save := loginForm.GetFormItemByLabel("Save my info").(*tview.Checkbox).IsChecked()
 			err := api.Init(login, password, save)
 			if err != nil {
-				loginScreen.GetFormItem(loginScreen.GetFormItemIndex("Status")).(*tview.TextView).SetText("Error: " + err.Error())
+				loginForm.GetFormItemByLabel("Status").(*tview.TextView).SetText("Error: " + err.Error())
 				return
 			}
-			loginScreen.GetFormItem(loginScreen.GetFormItemIndex("Status")).(*tview.TextView).SetText("Loading shop data...")
+			loginForm.GetFormItemByLabel("Status").(*tview.TextView).SetText("Loading shop data...")
 			err = api.UpdateShop()
 			if err != nil {
-				loginScreen.GetFormItem(loginScreen.GetFormItemIndex("Status")).(*tview.TextView).SetText("Error: Could not load shop data. Cannot proceed.")
+				loginForm.GetFormItemByLabel("Status").(*tview.TextView).SetText("Error: Could not load shop data. Cannot proceed.")
 				return
 			}
 			pages.SwitchToPage("entry")
 			// clear data
-			loginScreen.GetFormItem(loginScreen.GetFormItemIndex("Status")).(*tview.TextView).SetText("Logged out.\nPlease log in with your Nebula account first")
-			loginScreen.GetFormItem(loginScreen.GetFormItemIndex("Login")).(*tview.InputField).SetText("")
-			loginScreen.GetFormItem(loginScreen.GetFormItemIndex("Password")).(*tview.InputField).SetText("")
-			loginScreen.GetFormItem(loginScreen.GetFormItemIndex("Save my info")).(*tview.Checkbox).SetChecked(false)
+			loginForm.GetFormItemByLabel("Status").(*tview.TextView).SetText("Logged out.\nPlease log in with your Nebula account first")
+			loginForm.GetFormItemByLabel("Login").(*tview.InputField).SetText("")
+			loginForm.GetFormItemByLabel("Password").(*tview.InputField).SetText("")
+			loginForm.GetFormItemByLabel("Save my info").(*tview.Checkbox).SetChecked(false)
 			updateHeaderUI()
 		}).
 		AddButton("Quit", func() {
 			app.Stop()
 		}).SetButtonsAlign(tview.AlignCenter)
+	loginScreen := tview.NewGrid().SetColumns(0, 80, 0).SetRows(0, 80, 0).AddItem(loginForm, 1, 1, 1, 1, 0, 0, false)
 
 	// menu := newPrimitive("Menu")
 	order_config_basic := newPrimitive("Order configuration")
@@ -818,13 +889,60 @@ func setupUI() {
 		entryPage.AddItem(cart_section, 1, 2, 1, 1, 0, 130, false)
 	}
 
+	pd_cred := func() {
+		if order_form != nil {
+			entryPage.RemoveItem(order_form)
+		}
+
+		sel2 := []string{"-- SELECT --"}
+		credit_shop_items := api.GetCreditsItems()
+		for _, v := range credit_shop_items {
+			sel2 = append(sel2, *v.Name)
+		}
+
+		order_form = tview.NewForm().
+			AddDropDown("Bundle Type", sel2, 0, func(option string, optionIndex int) {
+				// find selected shop item
+				credOrderData.ItemType = option
+
+			}).
+			AddInputField("Amount", "", 20, onlyNumbers, func(text string) {
+				n, err := strconv.Atoi(text)
+				if err == nil {
+					credOrderData.Amount = n
+				}
+			}).
+			AddButton("Cancel", func() {
+				entryPage.RemoveItem(order_form).AddItem(order_config_basic, 1, 1, 1, 1, 0, 100, false)
+				app.SetFocus(main_menu_list)
+			}).
+			AddButton("Order directly", func() {
+				go func() {
+					app.Draw()
+					res, err := orderCredits(credit_shop_items, order_form)
+					if err != nil {
+						genericModal(fmt.Sprintf("Error: %s", err.Error()))
+						return
+					}
+					app.Draw()
+					if err != nil {
+						genericModal(fmt.Sprintf("Error: %s", err.Error()))
+						return
+					}
+					browserModal(res)
+					app.Draw()
+				}()
+			})
+		order_form.SetBorder(true).SetTitle("Order configuration").SetTitleAlign(tview.AlignCenter)
+		entryPage.RemoveItem(order_config_basic).AddItem(order_form, 1, 1, 1, 1, 0, 100, false)
+		app.SetFocus(order_form)
+	}
+
 	main_menu_list = tview.NewList().
 		AddItem("Buy Basic Preplanning", "Browse basic preplanning assets", 'b', basic_sel).
 		AddItem("Buy Exclusive Preplanning", "Browse heist-exclusive preplanning assets", 'e', exclusive_sel).
 		AddItem("C-Stacks Marketplace", "Buy C-Stacks directly from the source", 's', gold_sel).
-		AddItem("Add Credits", "Buy PayDay Credits from Nebula", 'c', func() {
-			genericModal("Not yet implemented.\nComing soon!")
-		}).
+		AddItem("Add Credits", "Buy PayDay Credits from Nebula", 'c', pd_cred).
 		AddItem("Quit", "Press to exit", 'q', func() {
 			app.Stop()
 		})

@@ -58,36 +58,37 @@ type ShopData struct {
 }
 
 type ShopItemData struct {
-	Title           *string           `json:"title,omitempty"`
-	ItemId          *string           `json:"itemId,omitempty"`
-	BaseAppId       *string           `json:"baseAppId,omitempty"`
-	Sku             *string           `json:"sku,omitempty"`
-	PrettyName      *string           `json:"pretty_name_pshop3,omitempty"`
-	PrettyHeistName *string           `json:"pretty_heist_name_pshop3,omitempty"`
-	Namespace       *string           `json:"namespace,omitempty"`
-	Name            *string           `json:"name,omitempty"`
-	EntitlementType *string           `json:"entitlementType,omitempty"`
-	UseCount        *int              `json:"useCount,omitempty"`
-	Stackable       *bool             `json:"stackable,omitempty"`
-	CategoryPath    *string           `json:"categoryPath,omitempty"`
-	Status          *string           `json:"status,omitempty"`
-	Listable        *bool             `json:"listable,omitempty"`
-	Purchasable     *bool             `json:"purchasable,omitempty"`
-	ItemType        *string           `json:"itemType,omitempty"`
-	RegionData      *[]ItemRegionData `json:"regionData,omitempty"`
-	RegionDataItem  *ItemRegionData   `json:"regionDataItem,omitempty"`
-	Images          *[]ItemImageData  `json:"images,omitempty"`
-	ItemIds         *[]string         `json:"itemIds,omitempty"`
-	ItemQty         *interface{}      `json:"itemQty,omitempty"`
-	BoundItemIds    *[]string         `json:"boundItemIds,omitempty"`
-	Tags            *[]string         `json:"tags,omitempty"`
-	Features        *[]string         `json:"features,omitempty"`
-	MaxCountPerUser *int              `json:"maxCountPerUser,omitempty"`
-	MaxCount        *int              `json:"maxCount,omitempty"`
-	Region          *string           `json:"region,omitempty"`
-	Language        *string           `json:"language,omitempty"`
-	CreatedAt       *string           `json:"createdAt,omitempty"`
-	UpdatedAt       *string           `json:"updatedAt,omitempty"`
+	Title              *string           `json:"title,omitempty"`
+	ItemId             *string           `json:"itemId,omitempty"`
+	BaseAppId          *string           `json:"baseAppId,omitempty"`
+	Sku                *string           `json:"sku,omitempty"`
+	PrettyName         *string           `json:"pretty_name_pshop3,omitempty"`
+	PrettyHeistName    *string           `json:"pretty_heist_name_pshop3,omitempty"`
+	Namespace          *string           `json:"namespace,omitempty"`
+	Name               *string           `json:"name,omitempty"`
+	EntitlementType    *string           `json:"entitlementType,omitempty"`
+	UseCount           *int              `json:"useCount,omitempty"`
+	Stackable          *bool             `json:"stackable,omitempty"`
+	CategoryPath       *string           `json:"categoryPath,omitempty"`
+	Status             *string           `json:"status,omitempty"`
+	Listable           *bool             `json:"listable,omitempty"`
+	Purchasable        *bool             `json:"purchasable,omitempty"`
+	ItemType           *string           `json:"itemType,omitempty"`
+	TargetCurrencyCode *string           `json:"targetCurrencyCode,omitempty"`
+	RegionData         *[]ItemRegionData `json:"regionData,omitempty"`
+	RegionDataItem     *ItemRegionData   `json:"regionDataItem,omitempty"`
+	Images             *[]ItemImageData  `json:"images,omitempty"`
+	ItemIds            *[]string         `json:"itemIds,omitempty"`
+	ItemQty            *interface{}      `json:"itemQty,omitempty"`
+	BoundItemIds       *[]string         `json:"boundItemIds,omitempty"`
+	Tags               *[]string         `json:"tags,omitempty"`
+	Features           *[]string         `json:"features,omitempty"`
+	MaxCountPerUser    *int              `json:"maxCountPerUser,omitempty"`
+	MaxCount           *int              `json:"maxCount,omitempty"`
+	Region             *string           `json:"region,omitempty"`
+	Language           *string           `json:"language,omitempty"`
+	CreatedAt          *string           `json:"createdAt,omitempty"`
+	UpdatedAt          *string           `json:"updatedAt,omitempty"`
 }
 
 type ItemRegionData struct {
@@ -248,6 +249,11 @@ type GoldOrderData struct {
 	BuyTypeID int
 	BuyType   string
 	Amount    int
+}
+
+type CreditOrderData struct {
+	ItemType string
+	Amount   int
 }
 
 var LD LoginData = LoginData{}
@@ -639,6 +645,19 @@ func ExecOrder(item OrderInitData) (OrderRespData, error) {
 	}
 
 	return resp, nil
+}
+
+func GetCreditsItems() []ShopItemData {
+	sid := []ShopItemData{}
+	for _, v := range *Shop.Data {
+		if v.TargetCurrencyCode == nil {
+			continue
+		}
+		if *v.TargetCurrencyCode == "CRED" && *v.Purchasable && *v.Listable {
+			sid = append(sid, v)
+		}
+	}
+	return sid
 }
 
 func Logout() {
